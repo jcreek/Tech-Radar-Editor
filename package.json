@@ -1,0 +1,36 @@
+{
+  "name": "tech-radar-editor",
+  "version": "1.0.0",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jcreek/Tech-Radar-Editor.git"
+  },
+  "main": "dist/tech-radar-editor.umd.js",
+  "module": "dist/tech-radar-editor.es.js",
+  "types": "dist/main.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && tsc -p tsconfig.build.json",
+    "preview": "vite preview",
+    "check": "svelte-check --tsconfig ./tsconfig.json && tsc -p tsconfig.node.json"
+  },
+  "dependencies": {
+    "svelte": "^4.2.18"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^3.1.1",
+    "@tsconfig/svelte": "^5.0.4",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "postcss-load-config": "^6.0.1",
+    "svelte-check": "^3.8.5",
+    "tailwindcss": "^3.4.13",
+    "tslib": "^2.6.3",
+    "typescript": "^5.5.3",
+    "vite": "^5.4.1"
+  }
+}
