@@ -22,10 +22,13 @@ pnpm build
 pnpm pack
 ```
 
+You can then test the package locally.
+
 To publish the component to NPM, run:
 
 ```bash
-pnpm publish
+npm login
+npm publish
 ```
 
 ## Consume the Component in Plain JavaScript
