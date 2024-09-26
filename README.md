@@ -1,5 +1,8 @@
 # Tech Radar Editor
 
+![NPM Version](https://img.shields.io/npm/v/tech-radar-editor)
+![NPM Downloads](https://img.shields.io/npm/dy/tech-radar-editor)
+
 A web component that allows users to easily create and edit a Tech Radar.
 
 ## Who created the Tech Radar?
