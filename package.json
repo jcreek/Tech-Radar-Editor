@@ -6,6 +6,20 @@
     "type": "git",
     "url": "https://github.com/jcreek/Tech-Radar-Editor.git"
   },
+  "keywords": [
+    "tech-radar",
+    "editor",
+    "visualization",
+    "web component",
+    "svelte",
+    "tech trends",
+    "technology radar",
+    "opensource",
+    "thoughtworks",
+    "zalando"
+  ],
+  "author": "Josh Creek",
+  "license": "GPL-3.0",
   "main": "dist/tech-radar-editor.umd.js",
   "module": "dist/tech-radar-editor.es.js",
   "types": "dist/main.d.ts",
