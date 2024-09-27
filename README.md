@@ -5,6 +5,8 @@
 
 A web component providing an easy-to-use UI that allows users to easily create and edit a Tech Radar without having to directly modify a JSON file. It also adds validation to ensure that your Tech Radar is always in a valid state.
 
+![Screenshot](./screenshot.png)
+
 ## Who created the Tech Radar?
 
 [ThoughtWorks](https://thoughtworks.com/radar) created the Tech Radar concept, and [Zalando created the visualization](https://opensource.zalando.com/tech-radar/) that is popular today.
