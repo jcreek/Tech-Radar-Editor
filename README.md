@@ -48,6 +48,77 @@ const routes = (
     />
 ```
 
+#### How to Use This Component in Backstage with a Config-Based URL
+
+##### Configure the URL in app-config.yaml
+
+In your Backstage `app-config.yaml`, add a config key for the editor’s JSON URL. For example:
+
+```yaml
+techRadar:
+  url: "https://example.org/path/to/tech-radar.json"
+```
+
+Adjust the key and value to suit your environment.
+
+##### Set up the type for the config value
+
+In your `package.json`, add:
+
+```json
+{
+  // ...
+  "files": [
+    // ...
+    "config.d.ts"
+  ],
+  "configSchema": "config.d.ts"
+}
+```
+
+You'll need to create a type definition for the config value in your Backstage app. In your `config.d.ts` file, add:
+
+````ts
+export interface Config {
+  techRadar: {
+    /**
+     * Frontend URL
+     * @visibility frontend
+     */
+    url: string;
+  };
+}
+```
+
+##### Create a small React wrapper in your Backstage app
+
+Somewhere in your Backstage app (for example, in `App.tsx` or in a separate `TechRadarEditorWrapper.tsx` file), create a tiny wrapper component to read the config and pass that URL to the `<tech-radar-editor>` web component as an attribute:
+
+```tsx
+import React from "react";
+import { useApi, configApiRef } from "@backstage/core-plugin-api";
+
+// Import the custom element so that React recognizes <tech-radar-editor>
+import "tech-radar-editor";
+
+export const TechRadarEditorWrapper = () => {
+  const configApi = useApi(configApiRef);
+  const dataUrl = configApi.getOptionalString("techRadar.url") ?? "";
+
+  return <tech-radar-editor data-url={dataUrl} />;
+};
+````
+
+##### Add a route for your Tech Radar Editor
+
+In your Backstage `App.tsx` (or wherever you define your routes), import that wrapper and point a route to it:
+
+```tsx
+<Route path="/tech-radar-editor" element={<TechRadarEditorWrapper />} />
+```
+
+Now when you visit `<your-backstage-host>/tech-radar-editor`, the `<tech-radar-editor>` component will automatically fetch the JSON from your configured URL.
+
 ## Consume the Component in Plain JavaScript
 
 Include the component in an HTML file:

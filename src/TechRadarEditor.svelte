@@ -7,6 +7,11 @@
 </style>
 
 <script lang="ts">
+  import { onMount } from "svelte";
+
+  // Accept the dataUrl prop from Backstage
+  export let dataUrl: string;
+
   interface TechRadarData {
     title: string;
     quadrants: Quadrant[];
@@ -71,6 +76,28 @@
       entry.id === updatedEntry.id ? updatedEntry : entry
     );
   }
+
+  onMount(async () => {
+    if (dataUrl) {
+      try {
+        const response = await fetch(dataUrl);
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch from ${dataUrl}: ${response.status}`
+          );
+        }
+        const remoteData = await response.json();
+        initializeData(remoteData);
+        techRadarData = remoteData;
+
+        showRings = false;
+        showQuadrants = false;
+        showEntries = false;
+      } catch (err) {
+        console.error(`Error fetching data from ${dataUrl}:`, err);
+      }
+    }
+  });
 
   function loadJson() {
     try {
