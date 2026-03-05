@@ -7,7 +7,8 @@
     "commitlint": "commitlint",
     "dev": "pnpm --filter tech-radar-editor dev",
     "release": "pnpm -r --workspace-concurrency=1 --filter './packages/*' exec semantic-release",
-    "release:dry-run": "pnpm -r --workspace-concurrency=1 --filter './packages/*' exec semantic-release --dry-run"
+    "release:dry-run": "pnpm -r --workspace-concurrency=1 --filter './packages/*' exec semantic-release --dry-run",
+    "release:verify-baseline": "node scripts/verify-release-baseline.mjs"
   },
   "engines": {
     "node": ">=18"

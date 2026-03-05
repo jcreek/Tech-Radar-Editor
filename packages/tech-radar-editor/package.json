@@ -20,6 +20,10 @@
   ],
   "author": "Josh Creek",
   "license": "GPL-3.0",
+  "publishConfig": {
+    "provenance": true,
+    "registry": "https://registry.npmjs.org/"
+  },
   "release": {
     "extends": [
       "../../release.config.cjs",

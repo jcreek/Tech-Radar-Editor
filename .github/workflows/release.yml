@@ -33,6 +33,9 @@ jobs:
           node-version: 22
           cache: pnpm
 
+      - name: Verify release baseline tags
+        run: pnpm release:verify-baseline
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -55,4 +58,5 @@ jobs:
       - name: Publish packages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_PROVENANCE: true
         run: pnpm release
