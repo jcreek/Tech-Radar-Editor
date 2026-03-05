@@ -1,4 +1,17 @@
-<svelte:options customElement="tech-radar-editor" />
+<svelte:options
+  customElement={{
+    tag: "tech-radar-editor",
+    props: {
+      dataUrl: { attribute: "data-url", reflect: false },
+      dataJson: { attribute: "data-json", reflect: false },
+      hideTitle: { attribute: "hide-title", type: "Boolean", reflect: false },
+      hideExport: { attribute: "hide-export", type: "Boolean", reflect: false },
+      hideJsonInput: { attribute: "hide-json-input", type: "Boolean", reflect: false },
+      hideJsonPreview: { attribute: "hide-json-preview", type: "Boolean", reflect: false },
+      autoExpandEntries: { attribute: "auto-expand-entries", type: "Boolean", reflect: false }
+    }
+  }}
+/>
 
 <style lang="postcss">
   @tailwind base;
@@ -8,50 +21,38 @@
 
 <script lang="ts">
   import { onMount } from "svelte";
+  import type { TechRadarData, Quadrant, Ring, Entry, TimelineEntry } from "./types";
 
-  // Accept the dataUrl prop from Backstage
-  export let dataUrl: string;
+  // Existing prop
+  export let dataUrl: string = '';
 
-  interface TechRadarData {
-    title: string;
-    quadrants: Quadrant[];
-    rings: Ring[];
-    entries: Entry[];
+  // New props (all backward-compatible, defaulting to falsy)
+  export let dataJson: string = '';
+  export let hideTitle: boolean | string = false;
+  export let hideExport: boolean | string = false;
+  export let hideJsonInput: boolean | string = false;
+  export let hideJsonPreview: boolean | string = false;
+  export let autoExpandEntries: boolean | string = false;
+
+  // Ref to container element, used to find the custom element host for event dispatch
+  let containerEl: HTMLElement;
+
+  function dispatchCustomEvent(name: string, detail: unknown) {
+    if (!containerEl) return;
+    const root = containerEl.getRootNode();
+    if (root && 'host' in root) {
+      (root as ShadowRoot).host.dispatchEvent(
+        new CustomEvent(name, { detail, bubbles: true, composed: true })
+      );
+    }
   }
 
-  interface Quadrant {
-    id: string;
-    name: string;
-    expanded?: boolean;
-  }
-
-  interface Ring {
-    id: string;
-    name: string;
-    color: string;
-    description?: string;
-    expanded?: boolean;
-  }
-
-  interface Entry {
-    id: string;
-    title: string;
-    description?: string;
-    key: string;
-    url?: string;
-    quadrant: string;
-    timeline: TimelineEntry[];
-    expanded?: boolean;
-  }
-
-  interface TimelineEntry {
-    id: string;
-    moved: number; // -1, 0, 1
-    ringId: string;
-    date: string; // format YYYY-MM-dd
-    description: string;
-    expanded?: boolean;
-  }
+  // Boolean coercion (Svelte 4 custom elements pass strings for attributes)
+  $: _hideTitle = hideTitle === true || hideTitle === 'true' || hideTitle === '';
+  $: _hideExport = hideExport === true || hideExport === 'true' || hideExport === '';
+  $: _hideJsonInput = hideJsonInput === true || hideJsonInput === 'true' || hideJsonInput === '';
+  $: _hideJsonPreview = hideJsonPreview === true || hideJsonPreview === 'true' || hideJsonPreview === '';
+  $: _autoExpandEntries = autoExpandEntries === true || autoExpandEntries === 'true' || autoExpandEntries === '';
 
   let techRadarData: TechRadarData = {
     title: '',
@@ -66,9 +67,31 @@
   let showQuadrants = false;
   let showEntries = false;
 
+  let dataLoaded = false;
+
   let idCounter = 0;
   function generateId() {
     return `id-${idCounter++}`;
+  }
+
+  /**
+   * Return a clean copy of the data without internal `expanded` properties.
+   */
+  function getCleanData(data: TechRadarData): TechRadarData {
+    return {
+      title: data.title,
+      quadrants: data.quadrants.map(({ expanded, ...q }) => q as Quadrant),
+      rings: data.rings.map(({ expanded, ...r }) => r as Ring),
+      entries: data.entries.map(({ expanded, ...e }) => ({
+        ...e,
+        timeline: e.timeline.map(({ expanded: _exp, ...t }) => t as TimelineEntry),
+      } as Entry)),
+    };
+  }
+
+  // Reactive dispatch: emit radar-data-change whenever techRadarData changes
+  $: if (dataLoaded && containerEl && techRadarData.title !== undefined) {
+    dispatchCustomEvent('radar-data-change', { data: getCleanData(techRadarData) });
   }
 
   function updateEntry(updatedEntry: Entry) {
@@ -78,7 +101,18 @@
   }
 
   onMount(async () => {
-    if (dataUrl) {
+    if (dataJson) {
+      try {
+        const parsed = JSON.parse(dataJson);
+        initializeData(parsed);
+        techRadarData = parsed;
+        if (_autoExpandEntries) showEntries = true;
+        dataLoaded = true;
+        dispatchCustomEvent('radar-data-loaded', { data: getCleanData(techRadarData) });
+      } catch (err) {
+        console.error('Error parsing dataJson:', err);
+      }
+    } else if (dataUrl) {
       try {
         const response = await fetch(dataUrl);
         if (!response.ok) {
@@ -93,6 +127,9 @@
         showRings = false;
         showQuadrants = false;
         showEntries = false;
+        if (_autoExpandEntries) showEntries = true;
+        dataLoaded = true;
+        dispatchCustomEvent('radar-data-loaded', { data: getCleanData(techRadarData) });
       } catch (err) {
         console.error(`Error fetching data from ${dataUrl}:`, err);
       }
@@ -110,6 +147,8 @@
       showRings = false;
       showQuadrants = false;
       showEntries = false;
+      dataLoaded = true;
+      dispatchCustomEvent('radar-data-loaded', { data: getCleanData(techRadarData) });
     } catch (error) {
       alert('Invalid JSON format');
       console.error(error);
@@ -230,7 +269,8 @@
       return;
     }
 
-    const jsonString = JSON.stringify(techRadarData, null, 2);
+    const cleanData = getCleanData(techRadarData);
+    const jsonString = JSON.stringify(cleanData, null, 2);
     navigator.clipboard.writeText(jsonString)
       .then(() => alert('JSON data has been copied to the clipboard!'))
       .catch(() => alert('Failed to copy JSON data.'));
@@ -285,19 +325,23 @@
   $: jsonString = JSON.stringify(techRadarData, null, 2);
 </script>
 
-<div class="container mx-auto p-4">
-  <h1 class="text-2xl font-bold mb-4">Tech Radar Editor</h1>
+<div class="container mx-auto p-4" bind:this={containerEl}>
+  {#if !_hideTitle}
+    <h1 class="text-2xl font-bold mb-4">Tech Radar Editor</h1>
+  {/if}
 
-  <div class="mb-4">
-    <textarea
-      bind:this={jsonTextarea}
-      class="w-full p-2 border rounded text-black"
-      placeholder="Paste your JSON here..."
-    ></textarea>
-    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-2" on:click={loadJson}>
-      Load JSON
-    </button>
-  </div>
+  {#if !_hideJsonInput}
+    <div class="mb-4">
+      <textarea
+        bind:this={jsonTextarea}
+        class="w-full p-2 border rounded text-black"
+        placeholder="Paste your JSON here..."
+      ></textarea>
+      <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-2" on:click={loadJson}>
+        Load JSON
+      </button>
+    </div>
+  {/if}
 
   <!-- Rings Section -->
   <h2 class="text-xl font-bold mb-2 flex items-center">
@@ -524,10 +568,14 @@
     {/each}
   {/if}
 
-  <button class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded mb-4 mt-4" on:click={exportJson}>
-    Export JSON
-  </button>
+  {#if !_hideExport}
+    <button class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded mb-4 mt-4" on:click={exportJson}>
+      Export JSON
+    </button>
+  {/if}
 
-  <h2 class="text-xl font-bold mb-2">JSON Preview:</h2>
-  <pre class="p-2 bg-gray-100 rounded text-black">{jsonString}</pre>
+  {#if !_hideJsonPreview}
+    <h2 class="text-xl font-bold mb-2">JSON Preview:</h2>
+    <pre class="p-2 bg-gray-100 rounded text-black">{jsonString}</pre>
+  {/if}
 </div>

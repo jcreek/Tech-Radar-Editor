@@ -19,109 +19,59 @@ Zalando has a fantastic description [on their website](https://opensource.zaland
 
 It serves and scales well for teams and companies of all sizes that want to have alignment across dozens of technologies and visualize it in a simple way.
 
+## Packages
+
+This is a monorepo containing three packages:
+
+| Package | Description |
+|---------|-------------|
+| [`tech-radar-editor`](./packages/tech-radar-editor) | The core web component (`<tech-radar-editor>`) |
+| [`tech-radar-editor-backend`](./packages/tech-radar-editor-backend) | Backstage backend plugin for Azure DevOps integration |
+| [`tech-radar-editor-backstage`](./packages/tech-radar-editor-backstage) | Backstage frontend wrapper component |
+
 ## Include the Component in Spotify Backstage
 
-### Install
+### Quick Start
 
-For either simple or advanced installations, you'll need to add the dependency using Yarn:
-
-From your Backstage root directory:
+1. Install packages:
 
 ```bash
-yarn --cwd packages/app add tech-radar-editor
+# From your Backstage root directory
+yarn --cwd packages/app add tech-radar-editor-backstage
+yarn --cwd packages/backend add tech-radar-editor-backend
 ```
 
-### Configuration
-
-Modify your app routes to include the Router component exported from the tech radar, for example:
-
-```tsx
-// In packages/app/src/App.tsx
-import 'tech-radar-editor';
-
-const routes = (
-  <FlatRoutes>
-    {/* ...other routes */}
-    <Route
-      path="/tech-radar-editor"
-      element={<tech-radar-editor></tech-radar-editor>}
-    />
-```
-
-#### How to Use This Component in Backstage with a Config-Based URL
-
-##### Configure the URL in app-config.yaml
-
-In your Backstage `app-config.yaml`, add a config key for the editor’s JSON URL. For example:
+2. Add config to `app-config.yaml`:
 
 ```yaml
-techRadar:
-  url: "https://example.org/path/to/tech-radar.json"
+techRadarEditor:
+  organization: my-org
+  project: my-project
+  repository: my-repo
+  filePath: /tech-radar.json     # optional, defaults to /tech-radar.json
+  targetBranch: main             # optional, defaults to main
 ```
 
-Adjust the key and value to suit your environment.
+3. Register the backend plugin in `packages/backend/src/index.ts`:
 
-##### Set up the type for the config value
-
-In your `package.json`, add:
-
-```json
-{
-  // ...
-  "files": [
-    // ...
-    "config.d.ts"
-  ],
-  "configSchema": "config.d.ts"
-}
+```ts
+backend.add(import('tech-radar-editor-backend'));
 ```
 
-You'll need to create a type definition for the config value in your Backstage app. In your `config.d.ts` file, add:
-
-````ts
-export interface Config {
-  techRadar: {
-    /**
-     * Frontend URL
-     * @visibility frontend
-     */
-    url: string;
-  };
-}
-```
-
-##### Create a small React wrapper in your Backstage app
-
-Somewhere in your Backstage app (for example, in `App.tsx` or in a separate `TechRadarEditorWrapper.tsx` file), create a tiny wrapper component to read the config and pass that URL to the `<tech-radar-editor>` web component as an attribute:
+4. Add the route in your `packages/app/src/App.tsx`:
 
 ```tsx
-import React from "react";
-import { useApi, configApiRef } from "@backstage/core-plugin-api";
+import { TechRadarEditorPage } from 'tech-radar-editor-backstage';
 
-// Import the custom element so that React recognizes <tech-radar-editor>
-import "tech-radar-editor";
-
-export const TechRadarEditorWrapper = () => {
-  const configApi = useApi(configApiRef);
-  const dataUrl = configApi.getOptionalString("techRadar.url") ?? "";
-
-  return <tech-radar-editor data-url={dataUrl} />;
-};
-````
-
-##### Add a route for your Tech Radar Editor
-
-In your Backstage `App.tsx` (or wherever you define your routes), import that wrapper and point a route to it:
-
-```tsx
-<Route path="/tech-radar-editor" element={<TechRadarEditorWrapper />} />
+// In your routes:
+<Route path="/tech-radar-editor" element={<TechRadarEditorPage />} />
 ```
 
-Now when you visit `<your-backstage-host>/tech-radar-editor`, the `<tech-radar-editor>` component will automatically fetch the JSON from your configured URL.
+That's it! The editor will fetch data from your Azure DevOps repository and allow users to submit changes as pull requests.
 
-## Consume the Component in Plain JavaScript
+## Use the Web Component Standalone
 
-Include the component in an HTML file:
+### In Plain HTML
 
 ```html
 <!DOCTYPE html>
@@ -137,64 +87,76 @@ Include the component in an HTML file:
 </html>
 ```
 
-## Consume the Component in React
+### In React
 
-In a React project, you can use the web component as you would use any custom HTML element.
-
-First, ensure that the component is imported or included:
-
-```js
-// index.js
-import React from "react";
-import ReactDOM from "react-dom";
-import "./index.css";
-
-// Import the component
-import "tech-radar-editor";
+```tsx
+import 'tech-radar-editor';
 
 function App() {
-  return (
-    <div className="App">
-      <tech-radar-editor></tech-radar-editor>
-    </div>
-  );
-}
-
-ReactDOM.render(<App />, document.getElementById("root"));
-```
-
-Note: In React, you might need to instruct TypeScript about the custom element. Create a react-app-env.d.ts or a global.d.ts file:
-
-```ts
-// react-app-env.d.ts
-declare namespace JSX {
-  interface IntrinsicElements {
-    "tech-radar-editor": any;
-  }
+  return <tech-radar-editor></tech-radar-editor>;
 }
 ```
 
-## Building the Component
+### With a Data URL
 
-To build the component, you need to have Node.js installed. Clone the repository and run the following commands:
+Load JSON from a URL on mount:
+
+```html
+<tech-radar-editor data-url="https://example.org/tech-radar.json"></tech-radar-editor>
+```
+
+### With Inline JSON Data
+
+Pass JSON directly via attribute:
+
+```html
+<tech-radar-editor data-json='{"title":"My Radar","quadrants":[],"rings":[],"entries":[]}'></tech-radar-editor>
+```
+
+### Web Component Props
+
+| Attribute | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `data-url` | `string` | `''` | URL to fetch JSON data from on mount |
+| `data-json` | `string` | `''` | JSON string to load directly (bypasses URL fetch) |
+| `hide-title` | `boolean\|string` | `false` | Hide the h1 heading |
+| `hide-export` | `boolean\|string` | `false` | Hide the "Export JSON" button |
+| `hide-json-input` | `boolean\|string` | `false` | Hide the textarea + "Load JSON" button |
+| `hide-json-preview` | `boolean\|string` | `false` | Hide the "JSON Preview" section |
+| `auto-expand-entries` | `boolean\|string` | `false` | Auto-expand the Entries section on load |
+
+### Custom Events
+
+| Event | Detail | Description |
+|-------|--------|-------------|
+| `radar-data-loaded` | `{ data: TechRadarData }` | Fired once when data is first loaded |
+| `radar-data-change` | `{ data: TechRadarData }` | Fired whenever the data changes |
+
+```js
+const editor = document.querySelector('tech-radar-editor');
+editor.addEventListener('radar-data-change', (e) => {
+  console.log('Updated data:', e.detail.data);
+});
+```
+
+## Building
 
 ```bash
 pnpm install
 pnpm build
 ```
 
-To get it ready to add to NPM or a CDN, run:
+To develop the web component with hot reload:
+
+```bash
+pnpm dev
+```
+
+To publish the packages to npm:
 
 ```bash
 pnpm build
-pnpm pack
-```
-
-You can then test the package locally.
-
-To publish the component to NPM, run:
-
-```bash
-npm login
-npm publish
+cd packages/tech-radar-editor && npm publish
+cd packages/tech-radar-editor-backend && npm publish
+cd packages/tech-radar-editor-backstage && npm publish
 ```

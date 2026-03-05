@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "jsx": "react-jsx",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"]
+  },
+  "include": ["src"]
+}
