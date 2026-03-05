@@ -161,11 +161,15 @@ Releases are now automated with GitHub Actions and `semantic-release`.
 - `fix:` triggers a patch release, `feat:` triggers a minor release, and `BREAKING CHANGE:` or `!` triggers a major release.
 - Only packages with changes since their last tag are published, so the three packages version independently.
 
-The release workflow expects an `NPM_TOKEN` repository secret with publish access to:
+The release workflow uses npm trusted publishing from GitHub Actions for:
 
 - `tech-radar-editor`
 - `tech-radar-editor-backend`
 - `tech-radar-editor-backstage`
+
+Each package must be configured in npm to trust releases from this GitHub repository's `main` branch workflow.
+
+The release job requires the GitHub Actions `id-token: write` permission so npm can validate the OIDC identity issued for this repository.
 
 To preview what the release job would do locally after installing dependencies:
 
