@@ -1,10 +1,26 @@
 {
   "private": true,
+  "packageManager": "pnpm@10.30.1",
   "scripts": {
     "build": "pnpm -r build",
-    "dev": "pnpm --filter tech-radar-editor dev"
+    "check": "pnpm --filter tech-radar-editor check",
+    "commitlint": "commitlint",
+    "dev": "pnpm --filter tech-radar-editor dev",
+    "release": "pnpm -r --workspace-concurrency=1 --filter './packages/*' exec semantic-release",
+    "release:dry-run": "pnpm -r --workspace-concurrency=1 --filter './packages/*' exec semantic-release --dry-run"
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.4.3",
+    "@commitlint/config-conventional": "^20.4.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/github": "^12.0.6",
+    "@semantic-release/npm": "^13.1.5",
+    "@semantic-release/release-notes-generator": "^14.1.0",
+    "conventional-changelog-conventionalcommits": "^9.3.0",
+    "semantic-release": "^25.0.3",
+    "semantic-release-monorepo": "^8.0.2"
   }
 }

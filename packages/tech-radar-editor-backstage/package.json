@@ -13,6 +13,12 @@
   },
   "author": "Josh Creek",
   "license": "GPL-3.0",
+  "release": {
+    "extends": [
+      "../../release.config.cjs",
+      "semantic-release-monorepo"
+    ]
+  },
   "scripts": {
     "build": "tsc"
   },

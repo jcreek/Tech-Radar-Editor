@@ -143,6 +143,7 @@ editor.addEventListener('radar-data-change', (e) => {
 
 ```bash
 pnpm install
+pnpm check
 pnpm build
 ```
 
@@ -152,11 +153,22 @@ To develop the web component with hot reload:
 pnpm dev
 ```
 
-To publish the packages to npm:
+## Release Automation
+
+Releases are now automated with GitHub Actions and `semantic-release`.
+
+- Every commit merged to `main` must follow the [Conventional Commits](https://www.conventionalcommits.org/) format.
+- `fix:` triggers a patch release, `feat:` triggers a minor release, and `BREAKING CHANGE:` or `!` triggers a major release.
+- Only packages with changes since their last tag are published, so the three packages version independently.
+
+The release workflow expects an `NPM_TOKEN` repository secret with publish access to:
+
+- `tech-radar-editor`
+- `tech-radar-editor-backend`
+- `tech-radar-editor-backstage`
+
+To preview what the release job would do locally after installing dependencies:
 
 ```bash
-pnpm build
-cd packages/tech-radar-editor && npm publish
-cd packages/tech-radar-editor-backend && npm publish
-cd packages/tech-radar-editor-backstage && npm publish
+pnpm release:dry-run
 ```

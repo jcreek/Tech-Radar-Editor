@@ -20,6 +20,12 @@
   ],
   "author": "Josh Creek",
   "license": "GPL-3.0",
+  "release": {
+    "extends": [
+      "../../release.config.cjs",
+      "semantic-release-monorepo"
+    ]
+  },
   "main": "dist/tech-radar-editor.umd.js",
   "module": "dist/tech-radar-editor.es.js",
   "types": "dist/main.d.ts",
